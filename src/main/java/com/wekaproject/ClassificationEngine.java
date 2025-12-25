@@ -69,57 +69,57 @@ public class ClassificationEngine {
             System.out.println("Could not create numeric normalized data: " + e.getMessage());
         }
 
-        // 1. Naive Bayes with original data (if has nominal)
-        if (dataProcessor.hasNominalAttributes()) {
-            currentApproach++;
-            updateProgress(currentApproach, totalApproaches);
-            runClassifier(new NaiveBayes(), originalData, "Naive Bayes (Original)");
-        }
-
-        // 2. Naive Bayes with discretized data
+        // 1. Naive Bayes - uses discretized data (converts numeric to nominal)
         if (nominalData != null) {
             currentApproach++;
             updateProgress(currentApproach, totalApproaches);
-            runClassifier(new NaiveBayes(), nominalData, "Naive Bayes (Discretized)");
+            runClassifier(new NaiveBayes(), nominalData, "Naive Bayes");
         }
 
-        // 3. J48 (Decision Tree) with original data
+        // 2. J48 (Decision Tree) with original data
         currentApproach++;
         updateProgress(currentApproach, totalApproaches);
-        runClassifier(new J48(), originalData, "J48 (Original)");
+        runClassifier(new J48(), originalData, "J48");
 
-        // 4. Random Forest with original data
+        // 3. Random Forest with original data
         currentApproach++;
         updateProgress(currentApproach, totalApproaches);
         RandomForest rf = new RandomForest();
         rf.setNumIterations(100);
-        runClassifier(rf, originalData, "Random Forest (Original)");
+        runClassifier(rf, originalData, "Random Forest");
 
-        // 5. Random Tree with original data
+        // 4. Random Tree with original data
         currentApproach++;
         updateProgress(currentApproach, totalApproaches);
-        runClassifier(new RandomTree(), originalData, "Random Tree (Original)");
+        runClassifier(new RandomTree(), originalData, "Random Tree");
 
         // For numeric algorithms, we need normalized numeric data
         if (numericNormalizedData != null) {
-            // 6. IBk (K=3)
+            // 5. IBk (K=3)
             currentApproach++;
             updateProgress(currentApproach, totalApproaches);
             IBk ibk3 = new IBk();
             ibk3.setKNN(3);
-            runClassifier(ibk3, numericNormalizedData, "IBk (K=3, Normalized)");
+            runClassifier(ibk3, numericNormalizedData, "IBk (K=3)");
 
-            // 7. IBk (K=5)
+            // 6. IBk (K=5)
             currentApproach++;
             updateProgress(currentApproach, totalApproaches);
             IBk ibk5 = new IBk();
             ibk5.setKNN(5);
-            runClassifier(ibk5, numericNormalizedData, "IBk (K=5, Normalized)");
+            runClassifier(ibk5, numericNormalizedData, "IBk (K=5)");
+
+            // 7. IBk (K=7)
+            currentApproach++;
+            updateProgress(currentApproach, totalApproaches);
+            IBk ibk7 = new IBk();
+            ibk7.setKNN(7);
+            runClassifier(ibk7, numericNormalizedData, "IBk (K=7)");
 
             // 8. Logistic Regression
             currentApproach++;
             updateProgress(currentApproach, totalApproaches);
-            runClassifier(new Logistic(), numericNormalizedData, "Logistic Regression (Normalized)");
+            runClassifier(new Logistic(), numericNormalizedData, "Logistic Regression");
 
             // 9. Multilayer Perceptron (ANN)
             currentApproach++;
@@ -129,12 +129,12 @@ public class ClassificationEngine {
             mlp.setMomentum(0.2);
             mlp.setTrainingTime(500);
             mlp.setHiddenLayers("a"); // Auto configure hidden layers
-            runClassifier(mlp, numericNormalizedData, "Multilayer Perceptron (Normalized)");
+            runClassifier(mlp, numericNormalizedData, "Multilayer Perceptron");
 
             // 10. SVM (SMO)
             currentApproach++;
             updateProgress(currentApproach, totalApproaches);
-            runClassifier(new SMO(), numericNormalizedData, "SVM (Normalized)");
+            runClassifier(new SMO(), numericNormalizedData, "SVM");
         }
 
         updateProgress(100, 100);
@@ -163,10 +163,7 @@ public class ClassificationEngine {
         // Recreate and train the best classifier
         Instances trainingData = null;
 
-        if (bestAlgorithmName.contains("Naive Bayes (Original)")) {
-            bestClassifier = new NaiveBayes();
-            trainingData = dataProcessor.getOriginalData();
-        } else if (bestAlgorithmName.contains("Naive Bayes (Discretized)")) {
+        if (bestAlgorithmName.contains("Naive Bayes")) {
             bestClassifier = new NaiveBayes();
             trainingData = dataProcessor.numericToNominal();
         } else if (bestAlgorithmName.contains("J48")) {
@@ -188,6 +185,11 @@ public class ClassificationEngine {
         } else if (bestAlgorithmName.contains("IBk (K=5")) {
             IBk ibk = new IBk();
             ibk.setKNN(5);
+            bestClassifier = ibk;
+            trainingData = dataProcessor.toNumericNormalized();
+        } else if (bestAlgorithmName.contains("IBk (K=7")) {
+            IBk ibk = new IBk();
+            ibk.setKNN(7);
             bestClassifier = ibk;
             trainingData = dataProcessor.toNumericNormalized();
         } else if (bestAlgorithmName.contains("Logistic Regression")) {
